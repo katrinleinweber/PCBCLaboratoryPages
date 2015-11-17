@@ -1,0 +1,116 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo=FALSE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  keep_md = TRUE
+  )
+
+# knit2synapse::knitfile2synapse("report.Rmd", owner="syn4906156", overwrite=TRUE)
+```
+
+### Overview
+```{r count-{{labname}}, results='asis', echo=FALSE}
+proto <- filter(protocols, Originating_Lab == "{{labname}}")
+dRNA <- filter(qrRNA, Originating_Lab == "{{labname}}")
+fRNA <- filter(filesRNA, Originating_Lab == "{{labname}}")
+dmiRNA <- filter(qrmiRNA, Originating_Lab == "{{labname}}")
+fmiRNA <- filter(filesmiRNA, Originating_Lab == "{{labname}}")
+dmethyl <- filter(qrmethyl, Originating_Lab == "{{labname}}")
+fmethyl <- filter(filesmethyl, Originating_Lab == "{{labname}}")
+cat(sprintf('There are %s mRNA-related assay files, %s miRNA-related assay files, and %s methylation-related assay files.\n', nrow(fRNA), nrow(fmiRNA), nrow(fmethyl)))
+
+availLines <- unique(c(dRNA$CellLineName, dmiRNA$CellLineName, dmethyl$CellLineName))
+cat(sprintf('\nThe lines for which there are files available for are:\n\n`%s`', 
+            paste(availLines, collapse=", ")))
+
+```
+
+### Samples
+```{r table-samples-{{labname}}, results='asis'}
+
+filterFxn <- function(x) x %>% select(CellLineName, DifferentiationState, public, Cell_Type, 
+    Cell_Line_of_Origin, Reprogramming_Vector_Type, Reprogramming_Gene_Combination)
+
+dAll <- rbind(dRNA %>% filterFxn, 
+              dmiRNA %>% filterFxn,
+              dmethyl %>% filterFxn)
+
+if (nrow(dAll) > 0) {
+  tmpAll <- dAll %>% 
+    unique %>% 
+    mutate(CellLineName=str_replace_all(CellLineName, "_", "\\\\_"))
+  tmpAll %>% 
+    kable(col.names=str_replace_all(colnames(tmpAll), "_", " "))
+} else {
+  cat("No samples.")
+}
+```
+```{r, results='asis'}
+cat("\n")
+```
+#### RNA files
+```{r table-rna-{{labname}}, results='asis'}
+if (nrow(fRNA) > 0) {
+  tmpRNA <- fRNA %>% 
+    dcast(CellLineName + UID ~ fileType + fileSubType, value.var="id") %>%
+    rename(fastq=fastq_NA, count=count_NA, eXpress=eXpress_NA) %>%
+    mutate(CellLineName=str_replace_all(CellLineName, "_", "\\\\_")) 
+  
+  tmpRNA %>% 
+    kable(col.names=str_replace(colnames(tmpRNA), "_", " "))
+} else {
+  cat("No mRNA files.")
+}
+```
+
+### miRNA files
+```{r table-mirna-{{labname}}, results='asis'}
+if (nrow(fmiRNA) > 0) {
+  tmpmiRNA <- fmiRNA %>% 
+    dcast(CellLineName + UID ~ fileType + fileSubType, value.var="id") %>%
+    mutate(CellLineName=str_replace_all(CellLineName, "_", "\\\\_")) %>% 
+    rename(align=align_NA, fastq=fastq_NA, expr=expr_NA, len=len_NA, 
+           nohit=nohit_NA, trim=trim_NA, merge=merge_NA) 
+  tmpmiRNA %>% 
+    kable(col.names=str_replace(colnames(tmpmiRNA), "_", " "))
+} else {
+  cat("No miRNA files.")
+}
+```
+
+### Methylation files
+```{r table-methyl-{{labname}}, results='asis'}
+if (nrow(fmethyl) > 0) {
+  tmpmethyl <- fmethyl %>% 
+    dcast(CellLineName + UID ~ fileType + fileSubType, value.var="id") %>%
+    mutate(CellLineName=str_replace_all(CellLineName, "_", "\\\\_")) 
+  tmpmethyl %>% 
+    kable(col.names=str_replace(colnames(tmpmethyl), "_", " "))
+} else {
+  cat("No methylation files.")
+}
+```
+
+### Protocols
+```{r table-protocols-{{labname}}, results='asis'}
+if (nrow(proto) > 0) {
+  tmpProto <- proto %>% 
+    select(id, name, Originating_Scientist)
+  
+  kable(tmpProto, col.names=str_replace(colnames(tmpProto), "_", " "))
+  
+} else {
+  cat("No protocols.")
+}
+```
+
+### Derived files
+Expression values derived from samples across the PCBC are available for each assay. For more details, see [here](#!Synapse:syn1773109/wiki/218833).
+
+```{r table-derived-{{labname}}, results='asis'}
+kable(derivedFiles, col.names=str_replace(colnames(derivedFiles), "_", " "))
+```
+
