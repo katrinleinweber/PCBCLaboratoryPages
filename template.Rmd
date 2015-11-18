@@ -20,6 +20,10 @@ dmiRNA <- filter(qrmiRNA, Originating_Lab == "{{labname}}")
 fmiRNA <- filter(filesmiRNA, Originating_Lab == "{{labname}}")
 dmethyl <- filter(qrmethyl, Originating_Lab == "{{labname}}")
 fmethyl <- filter(filesmethyl, Originating_Lab == "{{labname}}")
+karyo <- filter(karyotype, Originating_Lab == "{{labname}}")
+cna <- filter(copynumber, Originating_Lab == "{{labname}}")
+terat <- filter(teratomas, Originating_Lab == "{{labname}}")
+
 cat(sprintf('There are %s mRNA-related assay files, %s miRNA-related assay files, and %s methylation-related assay files.\n', nrow(fRNA), nrow(fmiRNA), nrow(fmethyl)))
 
 availLines <- unique(c(dRNA$CellLineName, dmiRNA$CellLineName, dmethyl$CellLineName))
@@ -56,7 +60,7 @@ cat("\n")
 if (nrow(fRNA) > 0) {
   tmpRNA <- fRNA %>% 
     dcast(CellLineName + UID ~ fileType + fileSubType, value.var="id") %>%
-    rename(fastq=fastq_NA, count=count_NA, eXpress=eXpress_NA) %>%
+    dplyr::rename(fastq=fastq_NA, count=count_NA, eXpress=eXpress_NA) %>%
     mutate(CellLineName=str_replace_all(CellLineName, "_", "\\\\_")) 
   
   tmpRNA %>% 
@@ -72,7 +76,7 @@ if (nrow(fmiRNA) > 0) {
   tmpmiRNA <- fmiRNA %>% 
     dcast(CellLineName + UID ~ fileType + fileSubType, value.var="id") %>%
     mutate(CellLineName=str_replace_all(CellLineName, "_", "\\\\_")) %>% 
-    rename(align=align_NA, fastq=fastq_NA, expr=expr_NA, len=len_NA, 
+    dplyr::rename(align=align_NA, fastq=fastq_NA, expr=expr_NA, len=len_NA, 
            nohit=nohit_NA, trim=trim_NA, merge=merge_NA) 
   tmpmiRNA %>% 
     kable(col.names=str_replace(colnames(tmpmiRNA), "_", " "))
@@ -104,6 +108,48 @@ if (nrow(proto) > 0) {
   
 } else {
   cat("No protocols.")
+}
+```
+
+### Copy Number Reports
+```{r table-cn-{{labname}}, results='asis'}
+if (nrow(cna) > 0) {
+  tmpCNA <- cna %>% 
+    select(CellLineName, id) %>% 
+    mutate(CellLineName=str_replace_all(CellLineName, "_", "\\\\_"))
+  
+  kable(tmpCNA, col.names=str_replace(colnames(tmpCNA), "_", " "))
+  
+} else {
+  cat("No copy number reports.")
+}
+```
+
+### Teratoma Assays
+```{r table-teratomas-{{labname}}, results='asis'}
+if (nrow(terat) > 0) {
+  tmpTeratoma <- terat %>% 
+    select(CellLineName, id) %>% 
+    mutate(CellLineName=str_replace_all(CellLineName, "_", "\\\\_"))
+  
+  kable(tmpTeratoma, col.names=str_replace(colnames(tmpTeratoma), "_", " "))
+  
+} else {
+  cat("No teratoma assays.")
+}
+```
+
+### Karyotyping
+```{r table-karyotype-{{labname}}, results='asis'}
+if (nrow(karyo) > 0) {
+  tmpKaryotype <- karyo %>% 
+    select(CellLineName, id) %>% 
+    mutate(CellLineName=str_replace_all(CellLineName, "_", "\\\\_"))
+  
+  kable(tmpKaryotype, col.names=str_replace(colnames(tmpKaryotype), "_", " "))
+  
+} else {
+  cat("No karyotyping.")
 }
 ```
 
