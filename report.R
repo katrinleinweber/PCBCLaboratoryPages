@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 protocols <- synQuery('select id,name,Originating_Lab,Originating_Scientist from file where parentId=="syn2512369"')
 colnames(protocols) <- gsub("file\\.", "", colnames(protocols))
 
-teratomas <- synQuery('select id,name,Originating_Lab,Originating_Lab_ID,C4_Cell_Line_ID from file where parentId=="syn2882776"')
+teratomas <- synQuery('select id,name,Originating_Lab,Originating_Lab_ID,C4_Cell_Line_ID from file where projectId=="syn1773109" and dataType=="Teratoma"')
 colnames(teratomas) <- gsub("file\\.", "", colnames(teratomas))
 
 teratomas <- teratomas %>% 
@@ -27,7 +27,7 @@ teratomas <- teratomas %>%
   mutate(Originating_Lab_ID=ifelse(Originating_Lab_ID == "N/A", C4_Cell_Line_ID, Originating_Lab_ID)) %>%
   dplyr::rename(CellLineName=Originating_Lab_ID)
 
-copynumber <- synQuery('select id,name,Originating_Lab,Originating_Lab_ID,C4_Cell_Line_ID from file where parentId=="syn2679103"')
+copynumber <- synQuery('select id,name,Originating_Lab,Originating_Lab_ID,C4_Cell_Line_ID from file where projectId=="syn1773109" and dataType=="CNV"')
 colnames(copynumber) <- gsub("file\\.", "", colnames(copynumber))
 
 copynumber <- copynumber %>% 
@@ -35,7 +35,7 @@ copynumber <- copynumber %>%
   mutate(Originating_Lab_ID=ifelse(Originating_Lab_ID == "N/A", C4_Cell_Line_ID, Originating_Lab_ID)) %>%
   dplyr::rename(CellLineName=Originating_Lab_ID)
 
-karyotype <- synQuery('select id,name,Originating_Lab,Originating_Lab_ID,C4_Cell_Line_ID from file where parentId=="syn2679104"')
+karyotype <- synQuery('select id,name,Originating_Lab,Originating_Lab_ID,C4_Cell_Line_ID from file where projectId=="syn1773109" and dataType=="Karyotype"')
 colnames(karyotype) <- gsub("file\\.", "", colnames(karyotype))
 
 karyotype <- karyotype %>% 
