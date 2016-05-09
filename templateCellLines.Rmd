@@ -1,0 +1,156 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo=FALSE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  keep_md = TRUE
+  )
+
+# knit2synapse::knitfile2synapse("report.Rmd", owner="syn4906156", overwrite=TRUE)
+```
+
+### Overview
+```{r count-{{c4_cell_line_id}}, results='asis', echo=FALSE}
+# proto <- filter(protocols, C4_Cell_Line_ID == "{{c4_cell_line_id}}")
+dRNA <- filter(qrRNA, C4_Cell_Line_ID == "{{c4_cell_line_id}}")
+fRNA <- filter(filesRNA, C4_Cell_Line_ID == "{{c4_cell_line_id}}")
+dmiRNA <- filter(qrmiRNA, C4_Cell_Line_ID == "{{c4_cell_line_id}}")
+fmiRNA <- filter(filesmiRNA, C4_Cell_Line_ID == "{{c4_cell_line_id}}")
+dmethyl <- filter(qrmethyl, C4_Cell_Line_ID == "{{c4_cell_line_id}}")
+fmethyl <- filter(filesmethyl, C4_Cell_Line_ID == "{{c4_cell_line_id}}")
+karyo <- filter(karyotype, C4_Cell_Line_ID == "{{c4_cell_line_id}}")
+cna <- filter(copynumber, C4_Cell_Line_ID == "{{c4_cell_line_id}}")
+terat <- filter(teratomas, C4_Cell_Line_ID == "{{c4_cell_line_id}}")
+
+cat(sprintf('There are %s mRNA-related assay files, %s miRNA-related assay files, and %s methylation-related assay files.\n', nrow(fRNA), nrow(fmiRNA), nrow(fmethyl)))
+
+# availLines <- unique(c(dRNA$CellLineName, dmiRNA$CellLineName, dmethyl$CellLineName))
+# cat(sprintf('\nThe lines for which there are files available for are:\n\n`%s`', 
+#             paste(availLines, collapse=", ")))
+
+```
+
+### Samples
+```{r table-samples-{{c4_cell_line_id}}, results='asis'}
+
+filterFxn <- function(x) x %>% select(C4_Cell_Line_ID, DifferentiationState, public, Cell_Type, 
+    Cell_Line_of_Origin, Reprogramming_Vector_Type, Reprogramming_Gene_Combination)
+
+dAll <- rbind(dRNA %>% filterFxn, 
+              dmiRNA %>% filterFxn,
+              dmethyl %>% filterFxn)
+
+if (nrow(dAll) > 0) {
+  tmpAll <- dAll %>% 
+    unique
+  tmpAll %>% 
+    kable(col.names=str_replace_all(colnames(tmpAll), "_", " "))
+} else {
+  cat("No samples.")
+}
+```
+```{r, results='asis'}
+cat("\n")
+```
+#### RNA files
+```{r table-rna-{{c4_cell_line_id}}, results='asis'}
+if (nrow(fRNA) > 0) {
+  tmpRNA <- fRNA %>% 
+    dcast(C4_Cell_Line_ID + UID ~ fileType + fileSubType, value.var="id") %>%
+    dplyr::rename(fastq=fastq_NA, count=count_NA, eXpress=eXpress_NA)
+  
+  tmpRNA %>% 
+    kable(col.names=str_replace_all(colnames(tmpRNA), "_", " "))
+} else {
+  cat("No mRNA files.")
+}
+```
+
+### miRNA files
+```{r table-mirna-{{c4_cell_line_id}}, results='asis'}
+if (nrow(fmiRNA) > 0) {
+  tmpmiRNA <- fmiRNA %>% 
+    dcast(C4_Cell_Line_ID + UID ~ fileType + fileSubType, value.var="id")
+  
+  colnames(tmpmiRNA) <- gsub("_NA$", "", colnames(tmpmiRNA))
+  
+  tmpmiRNA %>% 
+    kable(col.names=str_replace_all(colnames(tmpmiRNA), "_", " "))
+} else {
+  cat("No miRNA files.")
+}
+```
+
+### Methylation files
+```{r table-methyl-{{c4_cell_line_id}}, results='asis'}
+if (nrow(fmethyl) > 0) {
+  tmpmethyl <- fmethyl %>% 
+    dcast(C4_Cell_Line_ID + UID ~ fileType + fileSubType, value.var="id")
+  tmpmethyl %>% 
+    kable(col.names=str_replace_all(colnames(tmpmethyl), "_", " "))
+} else {
+  cat("No methylation files.")
+}
+```
+
+### Protocols
+```{r table-protocols-{{c4_cell_line_id}}, results='asis', include=FALSE, eval=FALSE}
+if (nrow(proto) > 0) {
+  tmpProto <- proto %>% 
+    select(id, name, Originating_Scientist)
+  
+  kable(tmpProto, col.names=str_replace_all(colnames(tmpProto), "_", " "))
+  
+} else {
+  cat("No protocols.")
+}
+```
+
+### Copy Number Reports
+```{r table-cn-{{c4_cell_line_id}}, results='asis'}
+if (nrow(cna) > 0) {
+  tmpCNA <- cna %>% 
+    select(C4_Cell_Line_ID, id)
+  
+  kable(tmpCNA, col.names=str_replace_all(colnames(tmpCNA), "_", " "))
+  
+} else {
+  cat("No copy number reports.")
+}
+```
+
+### Teratoma Assays
+```{r table-teratomas-{{c4_cell_line_id}}, results='asis'}
+if (nrow(terat) > 0) {
+  tmpTeratoma <- terat %>% 
+    select(C4_Cell_Line_ID, id)
+  
+  kable(tmpTeratoma, col.names=str_replace_all(colnames(tmpTeratoma), "_", " "))
+  
+} else {
+  cat("No teratoma assays.")
+}
+```
+
+### Karyotyping
+```{r table-karyotype-{{c4_cell_line_id}}, results='asis'}
+if (nrow(karyo) > 0) {
+  tmpKaryotype <- karyo %>% 
+    select(C4_Cell_Line_ID, id)
+  
+  kable(tmpKaryotype, col.names=str_replace_all(colnames(tmpKaryotype), "_", " "))
+  
+} else {
+  cat("No karyotyping.")
+}
+```
+
+### Derived files
+Expression values derived from samples across the PCBC are available for each assay. For more details, see [here](#!Synapse:syn1773109/wiki/218833).
+
+```{r table-derived-{{c4_cell_line_id}}, results='asis'}
+kable(derivedFiles, col.names=str_replace_all(colnames(derivedFiles), "_", " "))
+```
+
