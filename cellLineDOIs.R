@@ -8,7 +8,7 @@ synapseLogin()
 
 folderList <- synQuery('select id,name from folder where parentId=="syn5762789"') %>% 
   mutate(DOI=sprintf('doi:10.7303/%s', folder.id), 
-         URL=sprintf('http://dx.doi.org/10.7303/%s', folder.id)) %>% 
+         URL=sprintf('https://doi.org/10.7303/%s', folder.id)) %>% 
   rename(`Cell Line`=folder.name, `Synapse ID`=folder.id)
 
 write.csv(folderList, file="cell_line_dois.csv")
